@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        #form-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            min-height: 400px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>CHEFS Embed</h1>
+            <nav>
+                <a href="/">Public Page</a>
+                <a href="/protected">Protected Page</a>
+                <a href="/auth/logout">Logout</a>
+                <span class="user-info">Logged in as: <%= user.username %></span>
+            </nav>
+        </header>
+        
+        <main>
+            <div class="content">
+                <h2>CHEFS Embed</h2>
+                
+                <% if (error) { %>
+                    <div class="info-box error">
+                        <h3>Error</h3>
+                        <p><%= error %></p>
+                    </div>
+                <% } else { %>
+                    <div id="form-container">
+                        <!-- CHEFS Form Viewer Web Component -->
+                        <!-- 
+                            Required attributes:
+                            - form-id: CHEFS form UUID
+                            - auth-token: JWT token from gateway endpoint
+                            - base-url: Base URL for CHEFS API
+                            
+                            Optional attributes:
+                            - token: JSON string containing token object for Form.io evalContext
+                        -->
+                        <chefs-form-viewer
+                            form-id="<%= formId %>"
+                            auth-token="<%= authToken %>"
+                            base-url="<%= baseUrl %>"
+                            <% if (token) { %>token="<%- JSON.stringify(token).replace(/"/g, '&quot;') %>"<% } %>
+                        ></chefs-form-viewer>
+                    </div>
+
+                    <!-- Load the CHEFS Form Viewer component -->
+                    <script src="<%= baseUrl %>/embed/chefs-form-viewer.js"></script>
+
+                    <script>
+                        // ============================================
+                        // Debug: Log token information
+                        // ============================================
+                        <%
+                        if (token) {
+                        %>
+                        const tokenAttribute = <%- JSON.stringify(token) %>;
+                        console.log("🔑 Token attribute passed to web component:", tokenAttribute);
+                        <%
+                        } else {
+                        %>
+                        console.log("🔑 Token attribute: null/undefined");
+                        <%
+                        }
+                        
+                        if (decodedTokens && decodedTokens.accessToken && decodedTokens.accessToken.payload) {
+                        %>
+                        const decodedAccessToken = <%- JSON.stringify(decodedTokens.accessToken.payload) %>;
+                        console.log("🔐 Decoded Authorization Bearer token (accessToken payload):", decodedAccessToken);
+                        <%
+                        } else {
+                        %>
+                        console.log("🔐 Decoded Authorization Bearer token: not available");
+                        <%
+                        }
+                        %>
+
+                        // Wait for the component to be defined
+                        customElements.whenDefined("chefs-form-viewer").then(() => {
+                            const element = document.querySelector("chefs-form-viewer");
+                            
+                            // Also log what the element actually received
+                            <% if (token) { %>
+                            console.log("📋 Web component token attribute value:", element.getAttribute("token"));
+                            <% } %>
+
+                            // ============================================
+                            // Form Lifecycle Events
+                            // ============================================
+
+                            element.addEventListener("formio:beforeLoad", function (e) {
+                                console.log("🔄 formio:beforeLoad", e.detail);
+                            });
+
+                            element.addEventListener("formio:beforeLoadSchema", function (e) {
+                                console.log("📋 formio:beforeLoadSchema", e.detail);
+                            });
+
+                            element.addEventListener("formio:loadSchema", function (e) {
+                                console.log("✅ formio:loadSchema", e.detail);
+                            });
+
+                            element.addEventListener("formio:beforeInit", function (e) {
+                                console.log("⚙️ formio:beforeInit", e.detail);
+                            });
+
+                            element.addEventListener("formio:ready", function (e) {
+                                console.log("🎉 formio:ready", e.detail);
+                            });
+
+                            // ============================================
+                            // Form Rendering Events
+                            // ============================================
+
+                            element.addEventListener("formio:render", function (e) {
+                                console.log("🎨 formio:render", e.detail);
+                            });
+
+                            element.addEventListener("formio:change", function (e) {
+                                console.log("📝 formio:change", e.detail);
+                            });
+
+                            // ============================================
+                            // Submission Events
+                            // ============================================
+
+                            element.addEventListener("formio:beforeSubmit", function (e) {
+                                console.log("📤 formio:beforeSubmit", e.detail);
+                            });
+
+                            element.addEventListener("formio:submit", function (e) {
+                                console.log("🚀 formio:submit", e.detail);
+                            });
+
+                            element.addEventListener("formio:submitDone", function (e) {
+                                console.log("✅ formio:submitDone", e.detail);
+                            });
+
+                            // ============================================
+                            // Auto-Reload Events (after submission)
+                            // ============================================
+
+                            element.addEventListener("formio:beforeAutoReload", function (e) {
+                                console.log("🔄 formio:beforeAutoReload", e.detail);
+                            });
+
+                            element.addEventListener("formio:autoReload", function (e) {
+                                console.log("🔄 formio:autoReload", e.detail);
+                            });
+
+                            element.addEventListener("formio:autoReloadComplete", function (e) {
+                                console.log("✅ formio:autoReloadComplete", e.detail);
+                            });
+
+                            // ============================================
+                            // Navigation Events
+                            // ============================================
+
+                            element.addEventListener("formio:beforeNext", function (e) {
+                                console.log("➡️ formio:beforeNext", e.detail);
+                            });
+
+                            element.addEventListener("formio:beforePrev", function (e) {
+                                console.log("⬅️ formio:beforePrev", e.detail);
+                            });
+
+                            // ============================================
+                            // Authentication Events
+                            // ============================================
+
+                            element.addEventListener("formio:authTokenRefreshed", function (e) {
+                                console.log("🔐 formio:authTokenRefreshed", e.detail);
+                            });
+
+                            // ============================================
+                            // Error Events
+                            // ============================================
+
+                            element.addEventListener("formio:error", function (e) {
+                                console.error("❌ formio:error", e.detail);
+                            });
+
+                            // ============================================
+                            // Metadata Events (from embed script)
+                            // ============================================
+
+                            globalThis.addEventListener("chefs-form-viewer:metadata-loaded", function (e) {
+                                console.log("📄 chefs-form-viewer:metadata-loaded", e.detail);
+                            });
+
+                            globalThis.addEventListener("chefs-form-viewer:embedded", function (e) {
+                                console.log("🎯 chefs-form-viewer:embedded", e.detail);
+                            });
+
+                            // Load the form
+                            element.load().catch(function (error) {
+                                console.error("Failed to load form:", error);
+                            });
+                        });
+                    </script>
+                <% } %>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

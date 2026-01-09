@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Protected Page</h1>
+            <nav>
+                <a href="/">Public Page</a>
+                <a href="/chefs-embed">CHEFS Embed</a>
+                <a href="/auth/logout">Logout</a>
+                <span class="user-info">Logged in as: <%= user.username %></span>
+            </nav>
+        </header>
+        
+        <main>
+            <div class="content">
+                <h2>Protected Content</h2>
+                <p>This page requires authentication. Only logged-in users can access this content.</p>
+                
+                <div class="info-box protected">
+                    <h3>User Information</h3>
+                    <p><strong>User ID:</strong> <%= user.id %></p>
+                    <p><strong>Username:</strong> <%= user.username %></p>
+                    <% if (user.email) { %>
+                        <p><strong>Email:</strong> <%= user.email %></p>
+                    <% } %>
+                    <% if (user.name) { %>
+                        <p><strong>Name:</strong> <%= user.name %></p>
+                    <% } %>
+                    
+                    <h3>Token Information</h3>
+                    <p class="token-info">Decoded tokens from your session.</p>
+                    
+                    <% if (decodedTokens && decodedTokens.idToken) { %>
+                        <details>
+                            <summary>ID Token (Decoded)</summary>
+                            <div class="token-section">
+                                <h4>Header:</h4>
+                                <pre class="token-display"><%= JSON.stringify(decodedTokens.idToken.header, null, 2) %></pre>
+                                <h4>Payload:</h4>
+                                <pre class="token-display"><%= JSON.stringify(decodedTokens.idToken.payload, null, 2) %></pre>
+                            </div>
+                        </details>
+                    <% } %>
+                    
+                    <% if (decodedTokens && decodedTokens.accessToken) { %>
+                        <details>
+                            <summary>Access Token (Decoded)</summary>
+                            <div class="token-section">
+                                <h4>Header:</h4>
+                                <pre class="token-display"><%= JSON.stringify(decodedTokens.accessToken.header, null, 2) %></pre>
+                                <h4>Payload:</h4>
+                                <pre class="token-display"><%= JSON.stringify(decodedTokens.accessToken.payload, null, 2) %></pre>
+                            </div>
+                        </details>
+                    <% } %>
+                    
+                    <details>
+                        <summary>Raw Token Data (for debugging)</summary>
+                        <pre class="token-display"><%= JSON.stringify(user, null, 2) %></pre>
+                    </details>
+                </div>
+                
+                <div class="actions">
+                    <a href="/" class="btn">Go to Public Page</a>
+                    <a href="/chefs-embed" class="btn">CHEFS Embed</a>
+                    <a href="/auth/logout" class="btn btn-secondary">Logout</a>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

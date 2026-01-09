@@ -1,0 +1,16 @@
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: embed-keycloak
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_DB=dev-file
+      - KC_HTTP_RELATIVE_PATH=/
+    ports:
+      - "7777:8080"
+    volumes:
+      - ./chefs-embed-realm.json:/opt/keycloak/data/import/chefs-embed-realm.json
+    command: start-dev --import-realm
+    healthcheck:
+      disable: true

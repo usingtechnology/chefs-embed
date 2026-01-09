@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Public Page</h1>
+            <nav>
+                <% if (isAuthenticated) { %>
+                    <a href="/protected">Protected Page</a>
+                    <a href="/chefs-embed">CHEFS Embed</a>
+                    <a href="/auth/logout">Logout</a>
+                    <span class="user-info">Logged in as: <%= user.username %></span>
+                <% } else { %>
+                    <a href="/auth/login">Login</a>
+                <% } %>
+            </nav>
+        </header>
+        
+        <main>
+            <div class="content">
+                <h2>Welcome to the Public Page</h2>
+                <p>This page is accessible to everyone, whether you're logged in or not.</p>
+                
+                <% if (isAuthenticated) { %>
+                    <div class="info-box">
+                        <h3>You are logged in!</h3>
+                        <p><strong>Username:</strong> <%= user.username %></p>
+                        <% if (user.email) { %>
+                            <p><strong>Email:</strong> <%= user.email %></p>
+                        <% } %>
+                        <% if (user.name) { %>
+                            <p><strong>Name:</strong> <%= user.name %></p>
+                        <% } %>
+                        <p>
+                            <a href="/protected" class="btn">Visit Protected Page</a>
+                            <a href="/chefs-embed" class="btn">Visit CHEFS Embed</a>
+                        </p>
+                        
+                        <% if (decodedTokens && decodedTokens.idToken) { %>
+                            <details>
+                                <summary>View ID Token (Decoded)</summary>
+                                <div class="token-section">
+                                    <h4>Payload:</h4>
+                                    <pre class="token-display"><%= JSON.stringify(decodedTokens.idToken.payload, null, 2) %></pre>
+                                </div>
+                            </details>
+                        <% } %>
+                    </div>
+                <% } else { %>
+                    <div class="info-box">
+                        <h3>Not logged in</h3>
+                        <p>You can view this page without authentication.</p>
+                        <p><a href="/auth/login" class="btn">Login with Keycloak</a></p>
+                    </div>
+                <% } %>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
