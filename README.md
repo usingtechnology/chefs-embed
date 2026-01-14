@@ -6,7 +6,10 @@ A skeleton Node.js Express application with Keycloak OAuth/OIDC authentication, 
 
 - **Public Page** (`/`) - Accessible to everyone
 - **Protected Page** (`/protected`) - Requires Keycloak authentication
-- **CHEFS Embed Page** (`/chefs-embed`) - Embedded CHEFS form with Keycloak authentication
+- **CHEFS Embed Page** (`/chefs-embed`) - Platform-owned embed with Keycloak authentication
+- **Plugin Directory** (`/chefs-embed-plugins`) - Browse and launch plugins
+- **Plugin-driven Embed** (`/chefs-embed-plugin`) - Loads selected plugin module, shapes context, and wires events
+- **Theme CSS demo plugin** - Shows how clients can bundle and load their own theme stylesheet via `theme-css`
 - **Keycloak Integration** - OAuth/OIDC authentication flow
 - **Session Management** - Express sessions with Passport.js
 - **Pre-configured Realm** - Keycloak realm with test user and client
@@ -55,9 +58,9 @@ SESSION_SECRET=your-secret-key-change-in-production
 KEYCLOAK_ISSUER=http://localhost:7777/realms/chefs-embed
 KEYCLOAK_CLIENT_ID=express-app
 KEYCLOAK_CALLBACK_URL=http://localhost:3333/auth/callback
-CHEFS_BASE_URL=https://chefs-dev.apps.silver.devops.gov.bc.ca/app
-CHEFS_FORM_ID=7f936e1e-824c-4478-9880-8506430cfd43
-CHEFS_API_KEY=08d72bd2-0675-45d5-9aea-0c042db5ddf7
+CHEFS_BASE_URL=https://chefs-dev.apps.silver.devops.gov.bc.ca/pr-1802
+CHEFS_FORM_ID=3145c95c-337e-41e5-836c-138cf1256bc9
+CHEFS_API_KEY=a7464f97-9377-42ee-9f73-7c2d4250c132
 ```
 
 ### 4. Start the Express Application
@@ -94,43 +97,54 @@ The realm is automatically imported when Keycloak starts. It includes:
 
 ## CHEFS Embed Configuration
 
-This application demonstrates embedding CHEFS forms using the `chefs-form-viewer` web component with Keycloak authentication.
+This application demonstrates embedding CHEFS forms using the `chefs-form-viewer` web component with Keycloak authentication, plus a plugin system that can shape token/user/headers and inject a customer-owned theme stylesheet.
 
 ### Default Configuration
 
-- **Base URL**: `https://chefs-dev.apps.silver.devops.gov.bc.ca/app`
-- **Form ID**: `7f936e1e-824c-4478-9880-8506430cfd43`
-- **API Key**: Configured via `CHEFS_API_KEY` environment variable
+- **Base URL**: `https://chefs-dev.apps.silver.devops.gov.bc.ca/pr-1802` (override with `CHEFS_BASE_URL`)
+- **Form ID**: `3145c95c-337e-41e5-836c-138cf1256bc9` (override with `CHEFS_FORM_ID`)
+- **API Key**: `a7464f97-9377-42ee-9f73-7c2d4250c132` (override with `CHEFS_API_KEY`)
+- These are platform defaults for the `/chefs-embed` route; plugin-driven embeds supply their own baseUrl/formId/apiKey from each plugin manifest.
 
 ### How It Works
 
 1. **Authentication Token Fetching**: The backend fetches a CHEFS authentication token from the gateway endpoint using Basic authentication (`base64(formId:apiKey)`)
 
 2. **Web Component Attributes**:
-   - `form-id`: CHEFS form UUID (default: `7f936e1e-824c-4478-9880-8506430cfd43`)
+   - `form-id`: CHEFS form UUID (defaults above)
    - `auth-token`: JWT token fetched from CHEFS gateway endpoint
-   - `base-url`: Base URL for CHEFS API (default: `https://chefs-dev.apps.silver.devops.gov.bc.ca/app`)
-   - `token`: JSON object containing the decoded Keycloak access token payload (includes user roles, sub, email, etc.)
+   - `base-url`: Base URL for CHEFS API (defaults above)
+   - `token`: JSON string of the Keycloak access token payload for Form.io evalContext
+   - `user`: JSON string of a user object for evalContext
+   - `headers`: JSON string of headers for evalContext (filtered to avoid forbidden browser headers)
+   - `theme-css`: URL to a customer-owned theme stylesheet (set by plugins)
 
-3. **Token Context**: The complete Keycloak access token payload is passed to the web component via the `token` attribute, providing user context (roles, permissions, identity) to the Form.io evalContext.
+3. **Token Context**: The complete Keycloak access token payload is passed to the web component via the `token` attribute, providing user context (roles, permissions, identity) to the Form.io evalContext. Plugins can further shape token/user/headers.
 
 ### Implementation Details
 
-The `/chefs-embed` route:
+**Platform embed** (`/chefs-embed`):
 
 - Requires Keycloak authentication
 - Fetches CHEFS auth token from gateway endpoint
 - Decodes the user's Keycloak access token
-- Passes both tokens to the EJS template
-- Renders the `chefs-form-viewer` web component with proper attributes
+- Passes token/user/headers to `chefs-form-viewer`
 
-The web component loads the CHEFS form and uses the provided tokens for authentication and user context.
+**Plugin-driven embed** (`/chefs-embed-plugin?plugin=<slug>`):
+
+- Lists available plugin manifests from `/public/plugins`
+- Loads the selected plugin module, letting it shape token/user/headers
+- Plugins can set `theme-css` so the component loads customer-owned CSS (see `theme-css-demo`)
+
+The web component loads the CHEFS form and uses the provided tokens for authentication and user context. Plugin event handlers can cancel or await lifecycle events.
 
 ## Application Routes
 
 - `GET /` - Public page (accessible to everyone)
 - `GET /protected` - Protected page (requires authentication)
-- `GET /chefs-embed` - CHEFS form embed page (requires authentication)
+- `GET /chefs-embed` - Platform CHEFS embed (requires authentication)
+- `GET /chefs-embed-plugins` - Plugin directory (requires authentication)
+- `GET /chefs-embed-plugin?plugin=<slug>` - Plugin-driven embed (requires authentication)
 - `GET /auth/login` - Initiate Keycloak login
 - `GET /auth/callback` - OAuth callback handler
 - `GET /auth/logout` - Logout and redirect to Keycloak logout
@@ -158,7 +172,12 @@ The web component loads the CHEFS form and uses the provided tokens for authenti
    - If logged in, you'll see the embedded CHEFS form
    - The form uses the authenticated user's token for context
 
-5. **Logout**: Click "Logout" to end your session
+5. **Try the Plugin Flow**:
+   - Navigate to `http://localhost:3333/chefs-embed-plugins`
+   - Launch **Theme CSS Demo** to see a customer-bundled theme loaded via `theme-css`
+   - Watch console logs for lifecycle events and theme load confirmation
+
+6. **Logout**: Click "Logout" to end your session
 
 ## Project Structure
 
@@ -169,18 +188,26 @@ chefs-embed/
 │   ├── chefs-embed-realm.json  # Keycloak realm import file
 │   └── devcontainer.json       # VS Code devcontainer config
 ├── views/
-│   ├── public.ejs              # Public page template
-│   ├── protected.ejs           # Protected page template
-│   └── chefs-embed.ejs         # CHEFS form embed template
+│   ├── public.ejs                  # Public page template
+│   ├── protected.ejs               # Protected page template
+│   ├── chefs-embed.ejs             # Platform embed template
+│   ├── chefs-embed-plugins.ejs     # Plugin directory
+│   └── chefs-embed-plugin.ejs      # Plugin-driven embed
 ├── utils/
-│   ├── chefs.js                # CHEFS API token fetching utility
-│   └── jwt.js                  # JWT decoding utility
+│   ├── chefs.js                    # CHEFS API token fetching utility
+│   └── jwt.js                      # JWT decoding utility
 ├── public/
-│   └── styles.css             # Application styles
-├── config.js                  # Application configuration
-├── index.js                   # Express application entry point
-├── package.json               # Node.js dependencies
-└── README.md                  # This file
+│   ├── styles.css                  # Application styles
+│   └── plugins/
+│       ├── package.json            # ESM for plugins
+│       ├── chefs-embed-demo.js     # Demo: headers/token shaping and events
+│       ├── second-chefs-embed.js   # Demo: user shaping
+│       ├── theme-css-demo.js       # Demo: customer theme CSS loader
+│       └── theme-css-demo.css      # Customer-owned theme stylesheet
+├── config.js                        # Application configuration
+├── index.js                         # Express application entry point
+├── package.json                     # Node.js dependencies
+└── README.md                        # This file
 ```
 
 ## Troubleshooting

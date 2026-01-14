@@ -23,6 +23,9 @@ module.exports = {
       "http://localhost:7777/realms/chefs-embed/protocol/openid-connect/userinfo",
   },
   chefs: {
+    // Default CHEFS embed values for the platform example.
+    // Individual plugins can and do supply their own baseUrl/formId/apiKey
+    // when launched via /chefs-embed-plugin, so these serve only as defaults.
     baseUrl:
       process.env.CHEFS_BASE_URL ||
       "https://chefs-dev.apps.silver.devops.gov.bc.ca/pr-1802",
