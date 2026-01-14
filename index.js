@@ -5,8 +5,60 @@ const OpenIDConnectStrategy = require("passport-openidconnect").Strategy;
 const config = require("./config");
 const { decodeJWT } = require("./utils/jwt");
 const { fetchChefsToken } = require("./utils/chefs");
+const path = require("path");
+const { pathToFileURL } = require("url");
+const fs = require("fs/promises");
 
 const app = express();
+
+const pluginsDir = path.join(__dirname, "public", "plugins");
+
+const pluginManifestCache = new Map();
+
+async function loadPluginManifest(modulePath) {
+  if (pluginManifestCache.has(modulePath)) {
+    return pluginManifestCache.get(modulePath);
+  }
+  const absPath = path.join(__dirname, "public", modulePath.replace(/^\//, ""));
+  try {
+    const mod = await import(pathToFileURL(absPath));
+    const manifest = mod.manifest || null;
+    pluginManifestCache.set(modulePath, manifest);
+    return manifest;
+  } catch (err) {
+    console.error(`Failed to load plugin module ${modulePath}`, err);
+    pluginManifestCache.delete(modulePath);
+    return null;
+  }
+}
+
+async function discoverPluginModulePaths() {
+  try {
+    const entries = await fs.readdir(pluginsDir);
+    return entries
+      .filter((name) => name.endsWith(".js"))
+      .map((name) => `/plugins/${name}`);
+  } catch (err) {
+    console.error("Failed to read plugins directory", err);
+    return [];
+  }
+}
+
+async function loadAllPluginManifests() {
+  const modulePaths = await discoverPluginModulePaths();
+  const manifests = await Promise.all(
+    modulePaths.map(async (modulePath) => {
+      const manifest = await loadPluginManifest(modulePath);
+      return manifest
+        ? {
+            ...manifest,
+            modulePath,
+          }
+        : null;
+    })
+  );
+  return manifests.filter(Boolean);
+}
 
 // Configure session
 app.use(
@@ -145,6 +197,17 @@ app.get("/chefs-embed", requireAuth, async (req, res, next) => {
       decodedTokens?.idToken?.payload ||
       null;
 
+    // Build user object for Form.io evalContext from bearer payload
+    const bearerPayload = decodedTokens?.accessToken?.payload;
+    const userObject = bearerPayload
+      ? {
+          sub: bearerPayload.sub,
+          given_name: bearerPayload.given_name,
+          family_name: bearerPayload.family_name,
+          email: bearerPayload.email,
+        }
+      : null;
+
     // Prepare headers object for Form.io evalContext
     // Include request headers and Authorization Bearer token
     const headersObject = {
@@ -166,6 +229,7 @@ app.get("/chefs-embed", requireAuth, async (req, res, next) => {
       authToken: authToken,
       baseUrl: config.chefs.baseUrl,
       token: tokenObject, // optional - can be null/undefined if not needed
+      user: userObject, // optional user object for Form.io evalContext
       headers: headersObject, // Request headers for Form.io evalContext
       decodedTokens: decodedTokens,
       error: null,
@@ -181,8 +245,81 @@ app.get("/chefs-embed", requireAuth, async (req, res, next) => {
       baseUrl: config.chefs.baseUrl,
       authToken: null,
       token: null,
+      user: null,
       headers: null,
       decodedTokens: decodedTokensError,
+    });
+  }
+});
+
+// Plugin directory listing
+app.get("/chefs-embed-plugins", requireAuth, async (req, res) => {
+  const plugins = await loadAllPluginManifests();
+  res.render("chefs-embed-plugins", {
+    title: "CHEFS Plugin Directory",
+    user: req.user,
+    plugins,
+  });
+});
+
+// Plugin-driven CHEFS embed (keeps existing flow untouched)
+app.get("/chefs-embed-plugin", requireAuth, async (req, res) => {
+  try {
+    const plugins = await loadAllPluginManifests();
+    const pluginSlug = req.query.plugin || (plugins[0]?.slug ?? null);
+    const plugin = plugins.find((p) => p.slug === pluginSlug);
+    if (!plugin) {
+      return res.status(404).render("chefs-embed-plugin", {
+        title: "CHEFS Plugin Embed",
+        user: req.user,
+        error: pluginSlug
+          ? `Plugin "${pluginSlug}" not found.`
+          : "No plugins are available.",
+        formId: null,
+        authToken: null,
+        baseUrl: null,
+        requestContext: null,
+        plugin: null,
+      });
+    }
+
+    const decodedTokens = decodeUserTokens(req.user);
+
+    // Keep auth acquisition server-side (form-id + api-key)
+    const authToken = await fetchChefsToken(
+      plugin.formId || config.chefs.formId,
+      plugin.apiKey || config.chefs.apiKey,
+      plugin.baseUrl || config.chefs.baseUrl
+    );
+
+    // Raw context passed to the plugin so it can shape token/headers
+    const requestContext = {
+      headers: req.headers,
+      bearerToken: req.user?.accessToken || null,
+      decoded: decodedTokens,
+    };
+
+    res.render("chefs-embed-plugin", {
+      title: "CHEFS Plugin Embed",
+      user: req.user,
+      formId: plugin.formId || config.chefs.formId,
+      authToken,
+      baseUrl: plugin.baseUrl || config.chefs.baseUrl,
+      requestContext,
+      plugin,
+      error: null,
+    });
+  } catch (error) {
+    console.error("Error loading CHEFS plugin embed:", error);
+    res.status(500).render("chefs-embed-plugin", {
+      title: "CHEFS Plugin Embed",
+      user: req.user,
+      error: "Failed to load CHEFS plugin embed. Please try again later.",
+      formId: null,
+      baseUrl: null,
+      authToken: null,
+      requestContext: null,
+      plugin: null,
     });
   }
 });

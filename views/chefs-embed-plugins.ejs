@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>CHEFS Plugin Directory</h1>
+            <nav>
+                <a href="/">Public Page</a>
+                <a href="/protected">Protected Page</a>
+                <a href="/chefs-embed">CHEFS Embed</a>
+                <a href="/chefs-embed-plugins">Plugin Directory</a>
+                <a href="/auth/logout">Logout</a>
+                <span class="user-info">Logged in as: <%= user.username %></span>
+            </nav>
+        </header>
+        
+        <main>
+            <div class="content">
+                <h2>Available Plugins</h2>
+                <p>Select a plugin to launch the embed with its configuration and handlers.</p>
+
+                <% if (!plugins || plugins.length === 0) { %>
+                    <p>No plugins are registered.</p>
+                <% } else { %>
+                    <table class="plugin-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% plugins.forEach(function(plugin) { %>
+                                <tr>
+                                    <td><strong><%= plugin.name %></strong></td>
+                                    <td><%= plugin.description %></td>
+                                    <td><a class="btn" href="/chefs-embed-plugin?plugin=<%= plugin.slug %>">Launch</a></td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                <% } %>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

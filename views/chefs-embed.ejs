@@ -24,6 +24,7 @@
             <nav>
                 <a href="/">Public Page</a>
                 <a href="/protected">Protected Page</a>
+                <a href="/chefs-embed-plugins">Plugin Directory</a>
                 <a href="/auth/logout">Logout</a>
                 <span class="user-info">Logged in as: <%= user.username %></span>
             </nav>
@@ -56,6 +57,7 @@
                             auth-token="<%= authToken %>"
                             base-url="<%= baseUrl %>"
                             <% if (token) { %>token="<%- JSON.stringify(token).replace(/"/g, '&quot;') %>"<% } %>
+                            <% if (user) { %>user="<%- JSON.stringify(user).replace(/"/g, '&quot;') %>"<% } %>
                             <% if (headers) { %>headers="<%- JSON.stringify(headers).replace(/"/g, '&quot;') %>"<% } %>
                         ></chefs-form-viewer>
                     </div>

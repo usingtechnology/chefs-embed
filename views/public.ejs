@@ -14,6 +14,7 @@
                 <% if (isAuthenticated) { %>
                     <a href="/protected">Protected Page</a>
                     <a href="/chefs-embed">CHEFS Embed</a>
+                    <a href="/chefs-embed-plugins">Plugin Directory</a>
                     <a href="/auth/logout">Logout</a>
                     <span class="user-info">Logged in as: <%= user.username %></span>
                 <% } else { %>
@@ -40,6 +41,7 @@
                         <p>
                             <a href="/protected" class="btn">Visit Protected Page</a>
                             <a href="/chefs-embed" class="btn">Visit CHEFS Embed</a>
+                            <a href="/chefs-embed-plugins" class="btn">Plugin Directory</a>
                         </p>
                         
                         <% if (decodedTokens && decodedTokens.idToken) { %>

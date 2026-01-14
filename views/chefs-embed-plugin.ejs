@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>CHEFS Plugin Embed</h1>
+            <nav>
+                <a href="/">Public Page</a>
+                <a href="/protected">Protected Page</a>
+                <a href="/chefs-embed">CHEFS Embed</a>
+                <a href="/chefs-embed-plugins">Plugin Directory</a>
+                <a href="/auth/logout">Logout</a>
+                <span class="user-info">Logged in as: <%= user.username %></span>
+            </nav>
+        </header>
+        
+        <main>
+            <div class="content">
+                <h2><%= plugin?.name || "CHEFS Plugin" %></h2>
+                <% if (plugin?.description) { %>
+                    <p><%= plugin.description %></p>
+                <% } %>
+                
+                <% if (error) { %>
+                    <div class="info-box error">
+                        <h3>Error</h3>
+                        <p><%= error %></p>
+                    </div>
+                <% } else { %>
+                    <div id="form-container">
+                        <chefs-form-viewer></chefs-form-viewer>
+                    </div>
+
+                    <!-- Load the CHEFS Form Viewer component -->
+                    <script src="<%= baseUrl %>/embed/chefs-form-viewer.js"></script>
+
+                    <!-- Plugin wiring stays isolated here -->
+                    <% if (plugin) { %>
+                    <script type="module">
+                        (async () => {
+                            try {
+                                const modulePath = "<%= plugin ? plugin.modulePath : '' %>";
+                                const { register } = await import(modulePath);
+
+                                const requestContext = <%- JSON.stringify(requestContext || {}) %>;
+
+                                const { config = {}, handlers = {} } = register({
+                                    request: requestContext,
+                                });
+
+                                customElements.whenDefined("chefs-form-viewer").then(() => {
+                                    const viewer = document.querySelector("chefs-form-viewer");
+
+                                    // Required attributes from platform (unchanged)
+                                    viewer.setAttribute("form-id", "<%= formId %>");
+                                    viewer.setAttribute("auth-token", "<%= authToken %>");
+                                    viewer.setAttribute("base-url", "<%= baseUrl %>");
+
+                                    // Plugin-owned shaping
+                                    if (config.token) {
+                                        viewer.setAttribute("token", JSON.stringify(config.token));
+                                    }
+                                    if (config.user) {
+                                        viewer.setAttribute("user", JSON.stringify(config.user));
+                                    }
+                                    if (config.headers) {
+                                        viewer.setAttribute("headers", JSON.stringify(config.headers));
+                                    }
+                                    if (config.themeCss) {
+                                        viewer.setAttribute("theme-css", config.themeCss);
+                                    }
+
+                                    // Wire plugin event handlers (plugin can cancel/waitUntil)
+                                    Object.entries(handlers).forEach(([eventName, fn]) => {
+                                        if (typeof fn === "function") {
+                                            viewer.addEventListener(eventName, (event) =>
+                                                fn({ event, viewer, request: requestContext })
+                                            );
+                                        }
+                                    });
+
+                                    // Explicitly load the form to avoid auto-load reliance
+                                    if (typeof viewer.load === "function") {
+                                        viewer.load();
+                                    }
+                                });
+                            } catch (err) {
+                                console.error("Failed to load plugin module", err);
+                                const container = document.getElementById("form-container");
+                                if (container) {
+                                    const msg = document.createElement("div");
+                                    msg.className = "info-box error";
+                                    msg.innerHTML = "<h3>Plugin load failed</h3><p>Check console for details.</p>";
+                                    container.prepend(msg);
+                                }
+                            }
+                        })();
+                    </script>
+                    <% } else { %>
+                    <p>No plugin selected. Please choose one from the <a href="/chefs-embed-plugins">Plugin Directory</a>.</p>
+                    <% } %>
+                <% } %>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
