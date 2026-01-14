@@ -49,12 +49,14 @@
                             
                             Optional attributes:
                             - token: JSON string containing token object for Form.io evalContext
+                            - headers: JSON string containing request headers for Form.io evalContext
                         -->
                         <chefs-form-viewer
                             form-id="<%= formId %>"
                             auth-token="<%= authToken %>"
                             base-url="<%= baseUrl %>"
                             <% if (token) { %>token="<%- JSON.stringify(token).replace(/"/g, '&quot;') %>"<% } %>
+                            <% if (headers) { %>headers="<%- JSON.stringify(headers).replace(/"/g, '&quot;') %>"<% } %>
                         ></chefs-form-viewer>
                     </div>
 
@@ -96,6 +98,9 @@
                             // Also log what the element actually received
                             <% if (token) { %>
                             console.log("📋 Web component token attribute value:", element.getAttribute("token"));
+                            <% } %>
+                            <% if (headers) { %>
+                            console.log("📋 Web component headers attribute value:", element.getAttribute("headers"));
                             <% } %>
 
                             // ============================================

@@ -145,6 +145,19 @@ app.get("/chefs-embed", requireAuth, async (req, res, next) => {
       decodedTokens?.idToken?.payload ||
       null;
 
+    // Prepare headers object for Form.io evalContext
+    // Include request headers and Authorization Bearer token
+    const headersObject = {
+      ...req.headers,
+      Authorization: req.user?.accessToken
+        ? `Bearer ${req.user.accessToken}`
+        : null,
+    };
+    // Remove undefined/null values
+    Object.keys(headersObject).forEach(
+      (key) => headersObject[key] == null && delete headersObject[key]
+    );
+
     // Render the EJS template with all required variables
     res.render("chefs-embed", {
       title: "CHEFS Embed",
@@ -153,6 +166,7 @@ app.get("/chefs-embed", requireAuth, async (req, res, next) => {
       authToken: authToken,
       baseUrl: config.chefs.baseUrl,
       token: tokenObject, // optional - can be null/undefined if not needed
+      headers: headersObject, // Request headers for Form.io evalContext
       decodedTokens: decodedTokens,
       error: null,
     });
@@ -167,6 +181,7 @@ app.get("/chefs-embed", requireAuth, async (req, res, next) => {
       baseUrl: config.chefs.baseUrl,
       authToken: null,
       token: null,
+      headers: null,
       decodedTokens: decodedTokensError,
     });
   }
