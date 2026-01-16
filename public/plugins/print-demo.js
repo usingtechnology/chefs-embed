@@ -1,20 +1,17 @@
-// Demo plugin that ships a customer-owned theme stylesheet and proves it loads
-const themeCssUrl = new URL("./theme-css-demo.css", import.meta.url).toString();
-
+// Demo plugin: shapes token/headers from raw request context and wires events
 export const manifest = {
-  slug: "chefs-theme-demo",
-  name: "Theme CSS Demo",
-  description:
-    "Shows how a client bundles a theme CSS with their plugin and lets the web component load it.",
-  formId: "3145c95c-337e-41e5-836c-138cf1256bc9",
-  apiKey: "a7464f97-9377-42ee-9f73-7c2d4250c132",
+  slug: "print-demo",
+  name: "Embed Print",
+  description: "Embed demo showing how to print a form.",
+  formId: "a05b2034-db16-4d3f-9a0f-e2bdbfb0558b",
+  apiKey: "749134d7-3983-41a6-bf26-30262eed41ac",
   baseUrl: "https://chefs-dev.apps.silver.devops.gov.bc.ca/pr-1802",
   // Optional plugin-provided attributes (uncomment to use)
   // language: "en",
   // submissionId: "123",
   // readOnly: true,
   // noShadow: true,
-  // debug: true,
+  debug: true,
   // isolateStyles: true,
   // noIcons: true,
   // submitButtonKey: "submit",
@@ -73,34 +70,41 @@ export function register({ request }) {
       headers: shapedHeaders,
       token: shapedToken,
       user: shapedUser,
-      themeCss: themeCssUrl,
       ...optionalConfig,
     },
     handlers: {
-      "formio:assetStateChange": logThemeAsset(themeCssUrl),
+      "formio:beforeLoad": logEvent("beforeLoad"),
+      "formio:beforeLoadSchema": logEvent("beforeLoadSchema"),
+      "formio:loadSchema": logEvent("loadSchema"),
+      "formio:beforeInit": logEvent("beforeInit"),
       "formio:ready": logEvent("ready"),
       "formio:render": logEvent("render"),
       "formio:change": logEvent("change"),
+      "formio:beforeSubmit": logEvent("beforeSubmit"),
+      "formio:submit": logEvent("submit"),
+      "formio:submitDone": logEvent("submitDone"),
+      "formio:beforeAutoReload": logEvent("beforeAutoReload"),
+      "formio:autoReload": logEvent("autoReload"),
+      "formio:autoReloadComplete": logEvent("autoReloadComplete"),
+      "formio:beforeNext": logEvent("beforeNext"),
+      "formio:beforePrev": logEvent("beforePrev"),
+      "formio:authTokenRefreshed": logEvent("authTokenRefreshed"),
+      "formio:beforeFileUpload": logEvent("beforeFileUpload"),
+      "formio:beforeFileDownload": logEvent("beforeFileDownload"),
+      "formio:beforeFileDelete": logEvent("beforeFileDelete"),
+      "formio:error": logEvent("error", true),
     },
   };
 }
 
-function logEvent(name) {
+function logEvent(name, isError = false) {
   return ({ event }) => {
-    const prefix = "[theme-demo]";
+    const prefix = "[print-demo-plugin]";
     const payload = event?.detail;
-    console.log(`${prefix} ${name}`, payload);
-  };
-}
-
-function logThemeAsset(themeUrl) {
-  return ({ event }) => {
-    const assets = event?.detail?.assets || [];
-    if (assets.includes("theme-css")) {
-      console.info(
-        "[theme-demo] theme stylesheet loaded by web component",
-        themeUrl
-      );
+    if (isError) {
+      console.error(`${prefix} ${name}`, payload);
+    } else {
+      console.log(`${prefix} ${name}`, payload);
     }
   };
 }

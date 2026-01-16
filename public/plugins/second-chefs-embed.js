@@ -6,6 +6,19 @@ export const manifest = {
   formId: "fe625ece-71ca-4dc0-91a4-04fa8ed15e8b",
   apiKey: "228ac3e9-2f1f-4e69-8d19-5377ed8a787b",
   baseUrl: "https://chefs-dev.apps.silver.devops.gov.bc.ca/pr-1802",
+  // Optional plugin-provided attributes (uncomment to use)
+  // language: "en",
+  // submissionId: "123",
+  // readOnly: true,
+  // noShadow: true,
+  // debug: true,
+  // isolateStyles: true,
+  // noIcons: true,
+  // submitButtonKey: "submit",
+  // printButtonKey: "print",
+  // printEventName: "printDocument",
+  // autoReloadOnSubmit: false,
+  // themeCss: "https://example.com/theme.css",
 };
 
 export function register({ request }) {
@@ -37,11 +50,27 @@ export function register({ request }) {
       }
     : null;
 
+  const optionalConfig = pickOptional(manifest, [
+    "language",
+    "submissionId",
+    "readOnly",
+    "noShadow",
+    "debug",
+    "isolateStyles",
+    "noIcons",
+    "submitButtonKey",
+    "printButtonKey",
+    "printEventName",
+    "autoReloadOnSubmit",
+    "themeCss",
+  ]);
+
   return {
     config: {
       headers: shapedHeaders,
       token: shapedToken,
       user: shapedUser,
+      ...optionalConfig,
     },
     handlers: {
       "formio:beforeLoad": logEvent("beforeLoad"),
@@ -70,7 +99,7 @@ export function register({ request }) {
 
 function logEvent(name, isError = false) {
   return ({ event }) => {
-    const prefix = "[demo-plugin]";
+    const prefix = "[second-chefs-embed-plugin]";
     const payload = event?.detail;
     if (isError) {
       console.error(`${prefix} ${name}`, payload);
@@ -78,4 +107,13 @@ function logEvent(name, isError = false) {
       console.log(`${prefix} ${name}`, payload);
     }
   };
+}
+
+function pickOptional(source, keys) {
+  return keys.reduce((acc, key) => {
+    if (Object.prototype.hasOwnProperty.call(source, key)) {
+      acc[key] = source[key];
+    }
+    return acc;
+  }, {});
 }

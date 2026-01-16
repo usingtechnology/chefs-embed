@@ -7,6 +7,19 @@ export const manifest = {
   formId: "3145c95c-337e-41e5-836c-138cf1256bc9",
   apiKey: "a7464f97-9377-42ee-9f73-7c2d4250c132",
   baseUrl: "https://chefs-dev.apps.silver.devops.gov.bc.ca/pr-1802",
+  // Optional plugin-provided attributes (uncomment to use)
+  // language: "en",
+  // submissionId: "123",
+  // readOnly: true,
+  // noShadow: true,
+  // debug: true,
+  // isolateStyles: true,
+  // noIcons: true,
+  // submitButtonKey: "submit",
+  // printButtonKey: "print",
+  // printEventName: "printDocument",
+  // autoReloadOnSubmit: false,
+  // themeCss: "https://example.com/theme.css",
 };
 
 export function register({ request }) {
@@ -38,11 +51,27 @@ export function register({ request }) {
       }
     : null;
 
+  const optionalConfig = pickOptional(manifest, [
+    "language",
+    "submissionId",
+    "readOnly",
+    "noShadow",
+    "debug",
+    "isolateStyles",
+    "noIcons",
+    "submitButtonKey",
+    "printButtonKey",
+    "printEventName",
+    "autoReloadOnSubmit",
+    "themeCss",
+  ]);
+
   return {
     config: {
       headers: shapedHeaders,
       token: shapedToken,
       user: shapedUser,
+      ...optionalConfig,
     },
     handlers: {
       "formio:beforeLoad": logEvent("beforeLoad"),
@@ -79,4 +108,13 @@ function logEvent(name, isError = false) {
       console.log(`${prefix} ${name}`, payload);
     }
   };
+}
+
+function pickOptional(source, keys) {
+  return keys.reduce((acc, key) => {
+    if (Object.prototype.hasOwnProperty.call(source, key)) {
+      acc[key] = source[key];
+    }
+    return acc;
+  }, {});
 }

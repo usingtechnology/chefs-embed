@@ -62,19 +62,31 @@
                                     viewer.setAttribute("auth-token", "<%= authToken %>");
                                     viewer.setAttribute("base-url", "<%= baseUrl %>");
 
-                                    // Plugin-owned shaping
-                                    if (config.token) {
-                                        viewer.setAttribute("token", JSON.stringify(config.token));
-                                    }
-                                    if (config.user) {
-                                        viewer.setAttribute("user", JSON.stringify(config.user));
-                                    }
-                                    if (config.headers) {
-                                        viewer.setAttribute("headers", JSON.stringify(config.headers));
-                                    }
-                                    if (config.themeCss) {
-                                        viewer.setAttribute("theme-css", config.themeCss);
-                                    }
+                                    // Plugin-owned shaping: set only attributes explicitly provided by the plugin
+                                    const attrMap = [
+                                        { key: "token", attr: "token", json: true },
+                                        { key: "user", attr: "user", json: true },
+                                        { key: "headers", attr: "headers", json: true },
+                                        { key: "themeCss", attr: "theme-css" },
+                                        { key: "language", attr: "language" },
+                                        { key: "submissionId", attr: "submission-id" },
+                                        { key: "readOnly", attr: "read-only" },
+                                        { key: "noShadow", attr: "no-shadow" },
+                                        { key: "debug", attr: "debug" },
+                                        { key: "isolateStyles", attr: "isolate-styles" },
+                                        { key: "noIcons", attr: "no-icons" },
+                                        { key: "submitButtonKey", attr: "submit-button-key" },
+                                        { key: "printButtonKey", attr: "print-button-key" },
+                                        { key: "printEventName", attr: "print-event-name" },
+                                        { key: "autoReloadOnSubmit", attr: "auto-reload-on-submit" },
+                                    ];
+
+                                    attrMap.forEach(({ key, attr, json }) => {
+                                        if (config[key] !== undefined && config[key] !== null) {
+                                            const value = json ? JSON.stringify(config[key]) : config[key];
+                                            viewer.setAttribute(attr, value);
+                                        }
+                                    });
 
                                     // Wire plugin event handlers (plugin can cancel/waitUntil)
                                     Object.entries(handlers).forEach(([eventName, fn]) => {
