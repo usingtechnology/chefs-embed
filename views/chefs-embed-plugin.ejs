@@ -43,6 +43,8 @@
                     <!-- Plugin wiring stays isolated here -->
                     <% if (plugin) { %>
                     <script type="module">
+                        import { initUserTokenRefresh } from "/lib/user-token-refresh.js";
+
                         (async () => {
                             try {
                                 const modulePath = "<%= plugin ? plugin.modulePath : '' %>";
@@ -94,6 +96,21 @@
                                             viewer.addEventListener(eventName, (event) =>
                                                 fn({ event, viewer, request: requestContext })
                                             );
+                                        }
+                                    });
+
+                                    // Initialize automatic user token refresh
+                                    // Sets up the initial token and listens for formio:userTokenExpiring events
+                                    // to refresh via /auth/refresh-token
+                                    initUserTokenRefresh(viewer, {
+                                        initialToken: requestContext.bearerToken,
+                                        onRefreshFailed: (reason) => {
+                                            console.warn("[chefs-embed] Token refresh failed:", reason);
+                                            // Could redirect to login if needed:
+                                            // window.location.href = "/auth/login?returnTo=" + encodeURIComponent(window.location.href);
+                                        },
+                                        onRefreshSuccess: () => {
+                                            console.log("[chefs-embed] User token refreshed");
                                         }
                                     });
 

@@ -5,6 +5,7 @@ const OpenIDConnectStrategy = require("passport-openidconnect").Strategy;
 const config = require("./config");
 const { decodeJWT } = require("./utils/jwt");
 const { fetchChefsToken } = require("./utils/chefs");
+const authRefreshRoutes = require("./routes/auth-refresh");
 const path = require("path");
 const { pathToFileURL } = require("url");
 const fs = require("fs/promises");
@@ -296,6 +297,7 @@ app.get("/chefs-embed-plugin", requireAuth, async (req, res) => {
     const requestContext = {
       headers: req.headers,
       bearerToken: req.user?.accessToken || null,
+      tokenExpiresAt: decodedTokens?.accessToken?.payload?.exp || null,
       decoded: decodedTokens,
     };
 
@@ -325,6 +327,7 @@ app.get("/chefs-embed-plugin", requireAuth, async (req, res) => {
 });
 
 // Auth routes
+app.use("/auth", authRefreshRoutes);
 app.get("/auth/login", passport.authenticate("keycloak"));
 
 app.get(
