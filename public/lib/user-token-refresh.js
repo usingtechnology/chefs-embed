@@ -5,10 +5,12 @@
  * chefs-form-viewer web component and automatically refreshes the
  * user's access token via the host application's refresh endpoint.
  *
- * The web component automatically extracts JWT expiry from tokens,
- * so this helper only needs to provide the token string.
+ * Each plugin provides its own OIDC configuration. The pluginId is
+ * passed to the refresh endpoint, which looks up the OIDC config
+ * from the plugin registry.
  *
- * This keeps token refresh logic isolated from form plugins.
+ * If a plugin does not provide tokenRefresh configuration, this helper
+ * should not be initialized for that plugin.
  */
 
 /**
@@ -18,6 +20,7 @@ export class UserTokenRefresh {
   /**
    * @param {HTMLElement} viewer - The chefs-form-viewer element
    * @param {Object} options - Configuration options
+   * @param {string} options.pluginId - The plugin's slug identifier (required)
    * @param {string} [options.initialToken] - Initial bearer token to set up refresh scheduling
    * @param {string} [options.refreshUrl="/auth/refresh-token"] - Endpoint to call for refresh
    * @param {number} [options.buffer=60] - Seconds before expiry to trigger refresh
@@ -26,6 +29,7 @@ export class UserTokenRefresh {
    */
   constructor(viewer, options = {}) {
     this.viewer = viewer;
+    this.pluginId = options.pluginId;
     this.initialToken = options.initialToken || null;
     this.refreshUrl = options.refreshUrl || "/auth/refresh-token";
     this.buffer = options.buffer || 60;
@@ -42,6 +46,14 @@ export class UserTokenRefresh {
    */
   bind() {
     if (this._bound) return;
+
+    if (!this.pluginId) {
+      console.warn(
+        "[user-token-refresh] No pluginId provided, token refresh disabled"
+      );
+      return;
+    }
+
     this.viewer.addEventListener(
       "formio:userTokenExpiring",
       this._handleExpiring
@@ -89,6 +101,8 @@ export class UserTokenRefresh {
       const response = await fetch(this.refreshUrl, {
         method: "POST",
         credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pluginId: this.pluginId }),
       });
 
       if (!response.ok) {
@@ -137,22 +151,26 @@ export class UserTokenRefresh {
 /**
  * Initialize automatic user token refresh for a chefs-form-viewer element.
  *
+ * Returns null if the plugin does not have token refresh configured.
+ *
  * @param {HTMLElement} viewer - The chefs-form-viewer element
  * @param {Object} [options] - Configuration options
+ * @param {string} options.pluginId - The plugin's slug identifier (required)
  * @param {string} [options.initialToken] - Initial bearer token to set up refresh scheduling
  * @param {string} [options.refreshUrl="/auth/refresh-token"] - Endpoint to call for refresh
  * @param {number} [options.buffer=60] - Seconds before expiry to trigger refresh
  * @param {Function} [options.onRefreshFailed] - Callback when refresh fails
  * @param {Function} [options.onRefreshSuccess] - Callback when refresh succeeds
- * @returns {UserTokenRefresh} The refresh handler instance (can be used to unbind later)
+ * @returns {UserTokenRefresh|null} The refresh handler instance or null if not configured
  *
  * @example
  * import { initUserTokenRefresh } from "/lib/user-token-refresh.js";
  *
  * const viewer = document.querySelector("chefs-form-viewer");
  * const refresher = initUserTokenRefresh(viewer, {
- *   initialToken: accessToken,  // Sets up initial token and schedules refresh
- *   buffer: 60,                 // Notify 60 seconds before expiry (default)
+ *   pluginId: "my-plugin",           // Required: identifies which OIDC config to use
+ *   initialToken: accessToken,       // Sets up initial token and schedules refresh
+ *   buffer: 60,                      // Notify 60 seconds before expiry (default)
  *   onRefreshFailed: (reason) => {
  *     console.warn("Token refresh failed:", reason);
  *     // Optionally redirect to login
@@ -163,9 +181,16 @@ export class UserTokenRefresh {
  * });
  *
  * // Later, if needed:
- * // refresher.unbind();
+ * // refresher?.unbind();
  */
 export function initUserTokenRefresh(viewer, options) {
+  if (!options?.pluginId) {
+    console.log(
+      "[user-token-refresh] No pluginId provided, token refresh not enabled"
+    );
+    return null;
+  }
+
   const refresher = new UserTokenRefresh(viewer, options);
   refresher.bind();
   return refresher;

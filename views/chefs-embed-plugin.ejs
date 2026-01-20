@@ -99,11 +99,14 @@
                                         }
                                     });
 
-                                    // Initialize automatic user token refresh
-                                    // Sets up the initial token and listens for formio:userTokenExpiring events
-                                    // to refresh via /auth/refresh-token
+                                    // Initialize automatic user token refresh if plugin has tokenRefresh config.
+                                    // The plugin's OIDC configuration is registered server-side at startup.
+                                    // If the plugin does not have tokenRefresh.oidc, refresh is disabled.
+                                    <% if (plugin?.tokenRefresh?.oidc) { %>
                                     initUserTokenRefresh(viewer, {
+                                        pluginId: "<%= plugin.slug %>",
                                         initialToken: requestContext.bearerToken,
+                                        buffer: <%= plugin.tokenRefresh.buffer || 60 %>,
                                         onRefreshFailed: (reason) => {
                                             console.warn("[chefs-embed] Token refresh failed:", reason);
                                             // Could redirect to login if needed:
@@ -113,6 +116,9 @@
                                             console.log("[chefs-embed] User token refreshed");
                                         }
                                     });
+                                    <% } else { %>
+                                    console.log("[chefs-embed] Token refresh not configured for this plugin");
+                                    <% } %>
 
                                     // Explicitly load the form to avoid auto-load reliance
                                     if (typeof viewer.load === "function") {

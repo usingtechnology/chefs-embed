@@ -19,6 +19,18 @@ export const manifest = {
   // printEventName: "printDocument",
   // autoReloadOnSubmit: false,
   // themeCss: "https://example.com/theme.css",
+
+  // Token refresh configuration for this plugin's OIDC provider.
+  // If omitted, user token refresh is disabled for this plugin.
+  tokenRefresh: {
+    oidc: {
+      // The token endpoint for the plugin's OIDC provider (public client)
+      tokenEndpoint:
+        "http://localhost:7777/realms/chefs-embed/protocol/openid-connect/token",
+      clientId: "express-app",
+    },
+    buffer: 60, // Seconds before expiry to trigger refresh
+  },
 };
 
 export function register({ request }) {
@@ -101,7 +113,7 @@ export function register({ request }) {
 
 function logEvent(name, isError = false) {
   return ({ event }) => {
-    const prefix = "[second-chefs-embed-plugin]";
+    const prefix = "[token-refresh-demo-plugin]";
     const payload = event?.detail;
     if (isError) {
       console.error(`${prefix} ${name}`, payload);

@@ -20,6 +20,14 @@ export const manifest = {
   // printEventName: "printDocument",
   // autoReloadOnSubmit: false,
   // themeCss: "https://example.com/theme.css",
+
+  // Token refresh using host application's OIDC configuration.
+  // Set to "host" to use the host's Keycloak config, or provide
+  // { tokenEndpoint, clientId } for a custom OIDC provider.
+  tokenRefresh: {
+    oidc: "host",
+    buffer: 60,
+  },
 };
 
 export function register({ request }) {
