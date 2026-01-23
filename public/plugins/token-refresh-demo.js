@@ -3,9 +3,9 @@ export const manifest = {
   slug: "token-refresh-demo",
   name: "Token Refresh Demo",
   description: "A simple form that listens for token refresh events.",
-  formId: "189942c9-a444-43d9-a547-5d884c6e3bfe",
-  apiKey: "e6e80389-0ddd-4e14-a774-7b63f751eb01",
-  baseUrl: "https://chefs-dev.apps.silver.devops.gov.bc.ca/pr-1802",
+  formId: "6c26648f-573b-4659-8923-14d2e4eb95f9",
+  apiKey: "f1d8c55b-baf5-4a19-95bb-c39e7178ca0e",
+  baseUrl: "https://chefs-dev.apps.silver.devops.gov.bc.ca/app",
   // Optional plugin-provided attributes (uncomment to use)
   // language: "en",
   // submissionId: "123",
@@ -23,12 +23,7 @@ export const manifest = {
   // Token refresh configuration for this plugin's OIDC provider.
   // If omitted, user token refresh is disabled for this plugin.
   tokenRefresh: {
-    oidc: {
-      // The token endpoint for the plugin's OIDC provider (public client)
-      tokenEndpoint:
-        "http://localhost:7777/realms/chefs-embed/protocol/openid-connect/token",
-      clientId: "express-app",
-    },
+    oidc: "host",
     buffer: 60, // Seconds before expiry to trigger refresh
   },
 };

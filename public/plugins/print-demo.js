@@ -3,9 +3,9 @@ export const manifest = {
   slug: "print-demo",
   name: "Embed Print",
   description: "Embed demo showing how to print a form.",
-  formId: "a05b2034-db16-4d3f-9a0f-e2bdbfb0558b",
-  apiKey: "749134d7-3983-41a6-bf26-30262eed41ac",
-  baseUrl: "https://chefs-dev.apps.silver.devops.gov.bc.ca/pr-1802",
+  formId: "e0e847d2-f4c7-435f-9ef8-a23d0978926e",
+  apiKey: "f7f2ae53-2815-4541-94ce-ce3ec9fb3375",
+  baseUrl: "https://chefs-dev.apps.silver.devops.gov.bc.ca/app",
   // Optional plugin-provided attributes (uncomment to use)
   // language: "en",
   // submissionId: "123",

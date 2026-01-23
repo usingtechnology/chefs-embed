@@ -6,9 +6,9 @@ export const manifest = {
   name: "Theme CSS Demo",
   description:
     "Shows how a client bundles a theme CSS with their plugin and lets the web component load it.",
-  formId: "3145c95c-337e-41e5-836c-138cf1256bc9",
-  apiKey: "a7464f97-9377-42ee-9f73-7c2d4250c132",
-  baseUrl: "https://chefs-dev.apps.silver.devops.gov.bc.ca/pr-1802",
+  formId: "bcc7a548-1100-432d-82a3-5c0901574a0b",
+  apiKey: "83688c02-59d7-49fc-a25a-462895e37a13",
+  baseUrl: "https://chefs-dev.apps.silver.devops.gov.bc.ca/app",
   // Optional plugin-provided attributes (uncomment to use)
   // language: "en",
   // submissionId: "123",

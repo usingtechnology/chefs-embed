@@ -1,11 +1,11 @@
 // Demo plugin: shapes token/headers from raw request context and wires events
 export const manifest = {
   slug: "chefs-embed-2",
-  name: "Second CHEFS Embed - User",
+  name: "CHEFS Embed - User Object",
   description: "Embed demo showing how to pass and show a user object  .",
-  formId: "fe625ece-71ca-4dc0-91a4-04fa8ed15e8b",
-  apiKey: "228ac3e9-2f1f-4e69-8d19-5377ed8a787b",
-  baseUrl: "https://chefs-dev.apps.silver.devops.gov.bc.ca/pr-1802",
+  formId: "26a5deb0-5e66-421d-b75c-db6f074a9332",
+  apiKey: "4340c554-dc51-4869-8eb2-7445be71d63f",
+  baseUrl: "https://chefs-dev.apps.silver.devops.gov.bc.ca/app",
   // Optional plugin-provided attributes (uncomment to use)
   // language: "en",
   // submissionId: "123",
