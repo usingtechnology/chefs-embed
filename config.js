@@ -29,7 +29,5 @@ module.exports = {
     baseUrl:
       process.env.CHEFS_BASE_URL ||
       "https://chefs-dev.apps.silver.devops.gov.bc.ca/pr-1802",
-    formId: process.env.CHEFS_FORM_ID || "3145c95c-337e-41e5-836c-138cf1256bc9",
-    apiKey: process.env.CHEFS_API_KEY || "a7464f97-9377-42ee-9f73-7c2d4250c132",
   },
 };

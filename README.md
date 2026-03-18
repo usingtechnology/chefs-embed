@@ -6,7 +6,6 @@ A skeleton Node.js Express application with Keycloak OAuth/OIDC authentication, 
 
 - **Public Page** (`/`) - Accessible to everyone
 - **Protected Page** (`/protected`) - Requires Keycloak authentication
-- **CHEFS Embed Page** (`/chefs-embed`) - Platform-owned embed with Keycloak authentication
 - **Plugin Directory** (`/chefs-embed-plugins`) - Browse and launch plugins
 - **Plugin-driven Embed** (`/chefs-embed-plugin`) - Loads selected plugin module, shapes context, and wires events
 - **Theme CSS demo plugin** - Shows how clients can bundle and load their own theme stylesheet via `theme-css`
@@ -59,8 +58,6 @@ KEYCLOAK_ISSUER=http://localhost:7777/realms/chefs-embed
 KEYCLOAK_CLIENT_ID=express-app
 KEYCLOAK_CALLBACK_URL=http://localhost:3333/auth/callback
 CHEFS_BASE_URL=https://chefs-dev.apps.silver.devops.gov.bc.ca/pr-1802
-CHEFS_FORM_ID=3145c95c-337e-41e5-836c-138cf1256bc9
-CHEFS_API_KEY=a7464f97-9377-42ee-9f73-7c2d4250c132
 ```
 
 ### 4. Start the Express Application
@@ -102,9 +99,6 @@ This application demonstrates embedding CHEFS forms using the `chefs-form-viewer
 ### Default Configuration
 
 - **Base URL**: `https://chefs-dev.apps.silver.devops.gov.bc.ca/pr-1802` (override with `CHEFS_BASE_URL`)
-- **Form ID**: `3145c95c-337e-41e5-836c-138cf1256bc9` (override with `CHEFS_FORM_ID`)
-- **API Key**: `a7464f97-9377-42ee-9f73-7c2d4250c132` (override with `CHEFS_API_KEY`)
-- These are platform defaults for the `/chefs-embed` route; plugin-driven embeds supply their own baseUrl/formId/apiKey from each plugin manifest.
 
 ### How It Works
 
@@ -142,7 +136,6 @@ The web component loads the CHEFS form and uses the provided tokens for authenti
 
 - `GET /` - Public page (accessible to everyone)
 - `GET /protected` - Protected page (requires authentication)
-- `GET /chefs-embed` - Platform CHEFS embed (requires authentication)
 - `GET /chefs-embed-plugins` - Plugin directory (requires authentication)
 - `GET /chefs-embed-plugin?plugin=<slug>` - Plugin-driven embed (requires authentication)
 - `GET /auth/login` - Initiate Keycloak login

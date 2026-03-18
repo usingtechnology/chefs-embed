@@ -3,7 +3,7 @@ const config = require("../config");
 /**
  * Fetch an authentication token from CHEFS API for embedding forms
  * Uses Basic authentication with base64(formId:apiKey) as per CHEFS gateway API spec
- * 
+ *
  * @param {string} formId - CHEFS form UUID (optional, defaults to config)
  * @param {string} apiKey - API access key (optional, defaults to config)
  * @param {string} baseUrl - Base URL for CHEFS API (optional, defaults to config)
@@ -11,10 +11,10 @@ const config = require("../config");
  * @throws {Error} If token fetch fails
  */
 async function fetchChefsToken(formId = null, apiKey = null, baseUrl = null) {
-  const formIdToUse = formId || config.chefs.formId;
-  const apiKeyToUse = apiKey || config.chefs.apiKey;
+  const formIdToUse = formId;
+  const apiKeyToUse = apiKey;
   const baseUrlToUse = baseUrl || config.chefs.baseUrl;
-  
+
   const tokenUrl = `${baseUrlToUse}/gateway/v1/auth/token/forms/${formIdToUse}`;
 
   if (!formIdToUse || !apiKeyToUse) {
@@ -25,7 +25,9 @@ async function fetchChefsToken(formId = null, apiKey = null, baseUrl = null) {
     console.log(`Fetching CHEFS token from: ${tokenUrl}`);
 
     // Create Basic auth header: base64(formId:apiKey)
-    const basicAuth = Buffer.from(`${formIdToUse}:${apiKeyToUse}`).toString("base64");
+    const basicAuth = Buffer.from(`${formIdToUse}:${apiKeyToUse}`).toString(
+      "base64",
+    );
 
     const response = await fetch(tokenUrl, {
       method: "POST",
@@ -39,7 +41,7 @@ async function fetchChefsToken(formId = null, apiKey = null, baseUrl = null) {
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(
-        `Failed to fetch auth token: ${response.status} ${errorText}`
+        `Failed to fetch auth token: ${response.status} ${errorText}`,
       );
     }
 

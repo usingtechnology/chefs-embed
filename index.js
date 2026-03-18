@@ -1,3 +1,4 @@
+const path = require("path");
 const express = require("express");
 const session = require("express-session");
 const passport = require("passport");
@@ -24,7 +25,7 @@ app.use(
       secure: false, // Set to true if using HTTPS
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     },
-  })
+  }),
 );
 
 // Initialize Passport
@@ -53,7 +54,7 @@ passport.use(
       accessToken,
       refreshToken,
       params,
-      done
+      done,
     ) => {
       // The 'sub' (subject) is available in profile.id
       // context contains additional context/claims
@@ -69,8 +70,8 @@ passport.use(
         refreshToken: refreshToken,
         idToken: idToken, // Store ID token for logout
       });
-    }
-  )
+    },
+  ),
 );
 
 // Serialize user for session
@@ -99,8 +100,8 @@ app.set("views", "./views");
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// Static files
-app.use(express.static("public"));
+// Static files (absolute path so it works regardless of cwd)
+app.use(express.static(path.join(__dirname, "public")));
 
 // Helper function to decode tokens for display
 function decodeUserTokens(user) {
@@ -131,79 +132,6 @@ app.get("/protected", requireAuth, (req, res) => {
     user: req.user,
     decodedTokens: decodedTokens,
   });
-});
-
-app.get("/chefs-embed", requireAuth, async (req, res, next) => {
-  try {
-    const decodedTokens = decodeUserTokens(req.user);
-
-    // Fetch CHEFS auth token from gateway endpoint
-    const authToken = await fetchChefsToken(
-      config.chefs.formId,
-      config.chefs.apiKey,
-      config.chefs.baseUrl
-    );
-
-    // Prepare token object for Form.io evalContext (optional)
-    // Pass the complete accessToken payload to the web component
-    const tokenObject =
-      decodedTokens?.accessToken?.payload ||
-      decodedTokens?.idToken?.payload ||
-      null;
-
-    // Build user object for Form.io evalContext from bearer payload
-    const bearerPayload = decodedTokens?.accessToken?.payload;
-    const userObject = bearerPayload
-      ? {
-          sub: bearerPayload.sub,
-          given_name: bearerPayload.given_name,
-          family_name: bearerPayload.family_name,
-          email: bearerPayload.email,
-        }
-      : null;
-
-    // Prepare headers object for Form.io evalContext
-    // Include request headers and Authorization Bearer token
-    const headersObject = {
-      ...req.headers,
-      Authorization: req.user?.accessToken
-        ? `Bearer ${req.user.accessToken}`
-        : null,
-    };
-    // Remove undefined/null values
-    Object.keys(headersObject).forEach(
-      (key) => headersObject[key] == null && delete headersObject[key]
-    );
-
-    // Render the EJS template with all required variables
-    res.render("chefs-embed", {
-      title: "CHEFS Embed",
-      user: req.user,
-      formId: config.chefs.formId,
-      authToken: authToken,
-      baseUrl: config.chefs.baseUrl,
-      token: tokenObject, // optional - can be null/undefined if not needed
-      user: userObject, // optional user object for Form.io evalContext
-      headers: headersObject, // Request headers for Form.io evalContext
-      decodedTokens: decodedTokens,
-      error: null,
-    });
-  } catch (error) {
-    console.error("Error loading CHEFS embed:", error);
-    const decodedTokensError = decodeUserTokens(req.user);
-    res.status(500).render("chefs-embed", {
-      title: "CHEFS Embed",
-      user: req.user,
-      error: "Failed to load CHEFS form. Please try again later.",
-      formId: config.chefs.formId,
-      baseUrl: config.chefs.baseUrl,
-      authToken: null,
-      token: null,
-      user: null,
-      headers: null,
-      decodedTokens: decodedTokensError,
-    });
-  }
 });
 
 // Plugin directory listing
@@ -242,7 +170,7 @@ app.get("/chefs-embed-plugin", requireAuth, async (req, res) => {
     const authToken = await fetchChefsToken(
       plugin.formId || config.chefs.formId,
       plugin.apiKey || config.chefs.apiKey,
-      plugin.baseUrl || config.chefs.baseUrl
+      plugin.baseUrl || config.chefs.baseUrl,
     );
 
     // Raw context passed to the plugin so it can shape token/headers
@@ -287,7 +215,7 @@ app.get(
   passport.authenticate("keycloak", {
     successRedirect: "/protected",
     failureRedirect: "/auth/login",
-  })
+  }),
 );
 
 app.get("/auth/logout", (req, res) => {
