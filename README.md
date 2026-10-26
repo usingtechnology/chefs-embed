@@ -129,6 +129,14 @@ This application demonstrates embedding CHEFS forms using the `chefs-form-viewer
 - Lists available plugin manifests from `/public/plugins`
 - Loads the selected plugin module, letting it shape token/user/headers
 - Plugins can set `theme-css` so the component loads customer-owned CSS (see `theme-css-demo`)
+- Plugins can set `release` (e.g. `"1.1.0"`) to load a versioned component from `<baseUrl>/embed/<release>/embed/` instead of the legacy v1 path
+
+**Public forms without an API key** (`/chefs-embed-plugin?plugin=public-form-demo`):
+
+- A plugin with no `apiKey` skips the gateway token fetch, and the page sets no `auth-token`
+- With release `1.1.0` or later, the component then embeds the form anonymously through `/webcomponents/v1/public/{formId}`
+- The form must use the Public login option and list this site's origin (e.g. `http://localhost:3333`) under **Manage Form > Web Component > Allowed origins**
+- The page still requires Keycloak login, like the other plugins; the Keycloak token/user only feed the form's evalContext
 
 The web component loads the CHEFS form and uses the provided tokens for authentication and user context. Plugin event handlers can cancel or await lifecycle events.
 
@@ -195,6 +203,7 @@ chefs-embed/
 │       ├── package.json            # ESM for plugins
 │       ├── chefs-embed-demo.js     # Demo: headers/token shaping and events
 │       ├── second-chefs-embed.js   # Demo: user shaping
+│       ├── public-form-demo.js     # Demo: Public form, no API key (release 1.1.0)
 │       ├── theme-css-demo.js       # Demo: customer theme CSS loader
 │       └── theme-css-demo.css      # Customer-owned theme stylesheet
 ├── config.js                        # Application configuration

@@ -166,12 +166,17 @@ app.get("/chefs-embed-plugin", requireAuth, async (req, res) => {
 
     const decodedTokens = decodeUserTokens(req.user);
 
-    // Keep auth acquisition server-side (form-id + api-key)
-    const authToken = await fetchChefsToken(
-      plugin.formId || config.chefs.formId,
-      plugin.apiKey || config.chefs.apiKey,
-      plugin.baseUrl || config.chefs.baseUrl,
-    );
+    // Keep auth acquisition server-side (form-id + api-key).
+    // A plugin without an apiKey embeds a Public form anonymously (release 1.1.0+),
+    // so there is no token to fetch.
+    const apiKey = plugin.apiKey || config.chefs.apiKey;
+    const authToken = apiKey
+      ? await fetchChefsToken(
+          plugin.formId || config.chefs.formId,
+          apiKey,
+          plugin.baseUrl || config.chefs.baseUrl,
+        )
+      : null;
 
     // Raw context passed to the plugin so it can shape token/headers
     const requestContext = {
@@ -187,6 +192,7 @@ app.get("/chefs-embed-plugin", requireAuth, async (req, res) => {
       formId: plugin.formId || config.chefs.formId,
       authToken,
       baseUrl: plugin.baseUrl || config.chefs.baseUrl,
+      release: plugin.release || null,
       requestContext,
       plugin,
       error: null,

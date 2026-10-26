@@ -37,8 +37,8 @@
                         <chefs-form-viewer></chefs-form-viewer>
                     </div>
 
-                    <!-- Load the CHEFS Form Viewer component -->
-                    <script src="<%= baseUrl %>/embed/chefs-form-viewer.js"></script>
+                    <!-- Load the CHEFS Form Viewer component: a versioned release when the plugin names one, else the legacy v1 path -->
+                    <script src="<%= baseUrl %>/embed/<%= release ? `${release}/embed/` : '' %>chefs-form-viewer.js"></script>
 
                     <!-- Plugin wiring stays isolated here -->
                     <% if (plugin) { %>
@@ -61,8 +61,11 @@
 
                                     // Required attributes from platform (unchanged)
                                     viewer.setAttribute("form-id", "<%= formId %>");
-                                    viewer.setAttribute("auth-token", "<%= authToken %>");
                                     viewer.setAttribute("base-url", "<%= baseUrl %>");
+                                    // No auth-token means an anonymous Public form embed (release 1.1.0+)
+                                    <% if (authToken) { %>
+                                    viewer.setAttribute("auth-token", "<%= authToken %>");
+                                    <% } %>
 
                                     // Plugin-owned shaping: set only attributes explicitly provided by the plugin
                                     const attrMap = [
